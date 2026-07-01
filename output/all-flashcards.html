@@ -9,23 +9,50 @@
         .header h1 { color: #ff9900; margin: 0; }
         .stats { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 20px 0; }
         .badge { background: #ff9900; color: #232f3e; padding: 8px 16px; border-radius: 20px; font-weight: bold; }
+        .badge-score { background: #4caf50; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 18px; }
+        .badge-score.low { background: #f44336; }
+        .badge-score.medium { background: #ff9800; }
+        .badge-score.high { background: #4caf50; }
         .card { background: white; padding: 25px; margin: 20px 0; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
         .question { font-size: 18px; font-weight: 600; color: #232f3e; margin-bottom: 15px; line-height: 1.6; }
         .options { margin: 15px 0; }
-        .option { padding: 10px 12px; margin: 6px 0; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #ff9900; }
+        .option { padding: 10px 12px; margin: 6px 0; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #ff9900; cursor: pointer; transition: all 0.2s; }
+        .option:hover { background: #e8f0fe; transform: translateX(5px); }
+        .option.correct { background: #c8e6c9; border-left-color: #4caf50; }
+        .option.wrong { background: #ffcdd2; border-left-color: #f44336; }
+        .option.disabled { cursor: not-allowed; opacity: 0.7; }
+        .option.disabled:hover { transform: none; background: #f8f9fa; }
         .domain-tag { display: inline-block; background: #232f3e; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; margin-right: 5px; }
         .answer { display: none; margin-top: 15px; padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50; }
         .answer.show { display: block; }
         .btn { background: #232f3e; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s; margin: 5px; }
         .btn:hover { background: #ff9900; color: #232f3e; transform: scale(1.02); }
+        .btn-show { background: #007bff; }
+        .btn-show:hover { background: #0056b3; }
+        .btn-correct { background: #4caf50; }
+        .btn-correct:hover { background: #388e3c; }
+        .btn-incorrect { background: #f44336; }
+        .btn-incorrect:hover { background: #c62828; }
+        .btn-reset { background: #ff9800; }
+        .btn-reset:hover { background: #e68900; }
         .nav { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
         .search { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin: 10px 0; }
         .search:focus { outline: none; border-color: #ff9900; }
         .progress { position: fixed; top: 0; left: 0; height: 4px; background: #ff9900; transition: width 0.3s; z-index: 1000; }
         .controls { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0; }
-        .filter-btn { background: #e0e0e0; color: #333; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; }
+        .filter-btn { background: #e0e0e0; color: #333; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; }
         .filter-btn.active { background: #ff9900; color: #232f3e; }
-        .vote-tag { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 15px; font-size: 12px; margin-left: 5px; }
+        .status-tag { display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 12px; margin-left: 10px; }
+        .status-correct { background: #4caf50; color: white; }
+        .status-incorrect { background: #f44336; color: white; }
+        .score-container { text-align: center; margin: 20px 0; padding: 15px; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .score-number { font-size: 48px; font-weight: bold; color: #232f3e; }
+        .score-percent { font-size: 24px; color: #666; }
+        .score-bar { width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .score-bar-fill { height: 100%; background: #4caf50; transition: width 0.5s; border-radius: 10px; }
+        .score-bar-fill.low { background: #f44336; }
+        .score-bar-fill.medium { background: #ff9800; }
+        .score-bar-fill.high { background: #4caf50; }
     </style>
 </head>
 <body>
@@ -36,10 +63,25 @@
         <p>AWS Certified Cloud Practitioner - All Practice Questions</p>
     </div>
     
+    <!-- Score Display -->
+    <div class="score-container" id="scoreContainer">
+        <div>
+            <span class="score-number" id="scoreNumber">0</span>
+            <span class="score-percent">%</span>
+        </div>
+        <div class="score-bar">
+            <div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div>
+        </div>
+        <div style="font-size:14px;color:#666;">
+            <span id="correctCount">0</span> correct out of <span id="totalAnswered">0</span> answered
+        </div>
+    </div>
+    
     <div class="stats" id="stats">
         <span class="badge">📝 719 Questions</span>
-        <span class="badge">✅ 0 Answered</span>
+        <span class="badge">✅ <span id="answeredCount">0</span> Answered</span>
         <span class="badge">🎯 Multiple Choice</span>
+        <span class="badge" id="scoreBadge">📊 Score: 0%</span>
     </div>
     
     <div>
@@ -48,6 +90,10 @@
     
     <div class="controls" id="domainFilters">
         <button class="filter-btn active" onclick="filterByDomain('all')">All</button>
+    </div>
+    
+    <div style="text-align:center;margin:10px 0;">
+        <button class="btn btn-reset" onclick="resetProgress()">🔄 Reset Progress</button>
     </div>
     
     <div id="cards"></div>
@@ -59,17 +105,17 @@
     </div>
 
     <script>
-        // Sample questions - you'll need to load from your JSON file
-        const allQuestions = [];
+        let allQuestions = [];
         let currentPage = 0;
         const perPage = 10;
-        let answered = {};
+        let answered = {}; // { questionId: true/false }
+        let selectedAnswers = {}; // { questionId: selectedOptionIndex }
         let currentFilter = 'all';
-        let filteredQuestions = [...allQuestions];
+        let filteredQuestions = [];
 
         function renderQuestions(questions) {
             const container = document.getElementById('cards');
-            if (questions.length === 0) {
+            if (!questions || questions.length === 0) {
                 container.innerHTML = '<p style="text-align:center;padding:50px;">Loading questions from JSON file...</p>';
                 return;
             }
@@ -81,60 +127,135 @@
             let html = '';
             pageQuestions.forEach(q => {
                 const isAnswered = answered[q.id] !== undefined;
+                const isCorrect = answered[q.id] === true;
+                const selectedIdx = selectedAnswers[q.id];
+                
                 html += `<div class="card">`;
                 html += `<div class="question">Q${q.id}: ${q.question}</div>`;
                 html += `<div class="options">`;
                 if (q.options && q.options.length > 0) {
-                    q.options.forEach(opt => {
-                        html += `<div class="option">${opt}</div>`;
+                    q.options.forEach((opt, idx) => {
+                        let optClass = 'option';
+                        if (isAnswered) {
+                            optClass += ' disabled';
+                            if (idx === getCorrectIndex(q)) {
+                                optClass += ' correct';
+                            } else if (selectedIdx === idx && idx !== getCorrectIndex(q)) {
+                                optClass += ' wrong';
+                            }
+                        }
+                        html += `<div class="${optClass}" onclick="selectOption(${q.id}, ${idx})">${opt}</div>`;
                     });
                 }
                 html += `</div>`;
                 html += `<span class="domain-tag">${q.domain || 'General'}</span>`;
-                if (q.community_vote && q.community_vote !== 'Not available') {
-                    html += `<span class="vote-tag">📊 ${q.community_vote}</span>`;
-                }
-                html += `<br><br>`;
-                html += `<button class="btn" onclick="toggleAnswer(${q.id})">Show Answer</button>`;
                 if (isAnswered) {
-                    html += `<span style="margin-left:10px;color:${answered[q.id] ? 'green' : 'red'};">
-                        ${answered[q.id] ? '✅ Correct' : '❌ Incorrect'}
+                    html += `<span class="status-tag ${isCorrect ? 'status-correct' : 'status-incorrect'}">
+                        ${isCorrect ? '✅ Correct' : '❌ Incorrect'}
                     </span>`;
                 }
-                html += `<div class="answer" id="answer-${q.id}">`;
-                html += `<strong>✅ Answer: ${q.correct_answer}</strong><br>`;
-                html += `<div style="margin-top:5px;">`;
-                html += `<button class="btn" style="background:#4caf50;" onclick="markCorrect(${q.id})">✓ Correct</button>`;
-                html += `<button class="btn" style="background:#f44336;" onclick="markIncorrect(${q.id})">✗ Incorrect</button>`;
-                html += `</div>`;
-                html += `</div>`;
+                html += `<br><br>`;
+                
+                if (isAnswered) {
+                    html += `<button class="btn btn-show" onclick="toggleAnswer(${q.id})">Show Answer</button>`;
+                    html += `<div class="answer show" id="answer-${q.id}">`;
+                    html += `<strong>✅ Answer: ${q.correct_answer}</strong><br>`;
+                    html += `</div>`;
+                } else {
+                    html += `<button class="btn btn-show" onclick="toggleAnswer(${q.id})">Show Answer</button>`;
+                    html += `<div class="answer" id="answer-${q.id}">`;
+                    html += `<strong>✅ Answer: ${q.correct_answer}</strong><br>`;
+                    html += `</div>`;
+                }
+                
                 html += `</div>`;
             });
             
             container.innerHTML = html;
             updateStats(questions);
+            updateScore();
+        }
+
+        function getCorrectIndex(q) {
+            if (!q.correct_answer) return -1;
+            const letter = q.correct_answer.charAt(0);
+            return letter.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+        }
+
+        function selectOption(questionId, selectedIdx) {
+            // If already answered, ignore clicks
+            if (answered[questionId] !== undefined) return;
+            
+            // Find the question
+            const q = allQuestions.find(q => q.id === questionId);
+            if (!q) return;
+            
+            const correctIdx = getCorrectIndex(q);
+            const isCorrect = selectedIdx === correctIdx;
+            
+            // Store the answer
+            answered[questionId] = isCorrect;
+            selectedAnswers[questionId] = selectedIdx;
+            
+            // Re-render to show feedback
+            renderQuestions(filteredQuestions);
+            updateScore();
         }
 
         function toggleAnswer(id) {
-            const el = document.getElementById(`answer-${id}`);
-            if (el) el.classList.toggle('show');
+            const answerDiv = document.getElementById(`answer-${id}`);
+            if (answerDiv) {
+                answerDiv.classList.toggle('show');
+                const card = answerDiv.closest('.card');
+                const buttons = card.querySelectorAll('.btn-show');
+                buttons.forEach(btn => {
+                    btn.textContent = answerDiv.classList.contains('show') ? 'Hide Answer' : 'Show Answer';
+                });
+            }
         }
-
-        function markCorrect(id) { answered[id] = true; renderQuestions(filteredQuestions); }
-        function markIncorrect(id) { answered[id] = false; renderQuestions(filteredQuestions); }
 
         function updateStats(questions) {
             const total = questions.length;
             const answeredCount = Object.keys(answered).filter(id => answered[id] !== undefined).length;
+            const correctCount = Object.values(answered).filter(v => v === true).length;
+            const score = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+            
+            document.getElementById('answeredCount').textContent = answeredCount;
             document.getElementById('stats').innerHTML = `
                 <span class="badge">📝 ${total} Questions</span>
                 <span class="badge">✅ ${answeredCount} Answered</span>
                 <span class="badge">🎯 Multiple Choice</span>
+                <span class="badge" id="scoreBadge">📊 Score: ${score}%</span>
             `;
+            
             const progress = total > 0 ? (answeredCount / total * 100) : 0;
             document.getElementById('progressBar').style.width = progress + '%';
             const totalPages = Math.ceil(questions.length / perPage) || 1;
             document.getElementById('pageInfo').textContent = `Page ${currentPage + 1} of ${totalPages}`;
+        }
+
+        function updateScore() {
+            const answeredCount = Object.keys(answered).filter(id => answered[id] !== undefined).length;
+            const correctCount = Object.values(answered).filter(v => v === true).length;
+            const score = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+            
+            document.getElementById('scoreNumber').textContent = score;
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('totalAnswered').textContent = answeredCount;
+            
+            // Update score bar
+            const bar = document.getElementById('scoreBarFill');
+            bar.style.width = score + '%';
+            bar.className = 'score-bar-fill';
+            if (score < 50) bar.classList.add('low');
+            else if (score < 70) bar.classList.add('medium');
+            else bar.classList.add('high');
+            
+            // Update score badge
+            const badge = document.getElementById('scoreBadge');
+            if (badge) {
+                badge.textContent = `📊 Score: ${score}%`;
+            }
         }
 
         function filterQuestions() {
@@ -160,6 +281,15 @@
             filterQuestions();
         }
 
+        function resetProgress() {
+            if (confirm('Reset all progress? This will clear all answers.')) {
+                answered = {};
+                selectedAnswers = {};
+                renderQuestions(filteredQuestions);
+                updateScore();
+            }
+        }
+
         function prevPage() {
             if (currentPage > 0) {
                 currentPage--;
@@ -178,7 +308,7 @@
         fetch('questions/all-questions.json')
             .then(response => response.json())
             .then(data => {
-                allQuestions.push(...data.questions);
+                allQuestions = data.questions || [];
                 filteredQuestions = [...allQuestions];
                 renderQuestions(filteredQuestions);
                 
